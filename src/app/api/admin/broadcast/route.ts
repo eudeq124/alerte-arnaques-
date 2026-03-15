@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { broadcastAlert } from "@/lib/mail";
+// import { broadcastAlert } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    const { broadcastAlert } = await import("@/lib/mail");
     const { title, content } = await req.json();
 
     if (!title || !content) {
