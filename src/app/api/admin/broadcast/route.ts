@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { broadcastAlert } from "@/lib/mail";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const { title, content } = await req.json();
