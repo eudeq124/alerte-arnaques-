@@ -11,9 +11,9 @@ export async function POST(req: Request) {
     }
 
     // --- GESTION DE LA CATÉGORIE ---
-    let category = await prisma.category.findFirst({ where: { name: scamType } });
+    let category = await (prisma as any).category.findFirst({ where: { name: scamType } });
     if (!category) {
-      category = await prisma.category.create({
+      category = await (prisma as any).category.create({
         data: { name: scamType, description: `Catégorie: ${scamType}` }
       });
     }
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     
     // Identification forte (Membres Gold ou Identité instantanée)
     if (reporterId) {
-        const reporter = await prisma.certifiedUser.findUnique({ where: { id: reporterId } });
+        const reporter = await (prisma as any).certifiedUser.findUnique({ where: { id: reporterId } });
         if (reporter?.isCertified) trustScore += 50;
     } else if (reporterSelfie && reporterIdCard) {
         trustScore += 60; // Bonus majeur car plaignant identifié
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
     const verificationLevel = trustScore >= 80 ? "CERTIFIED" : trustScore >= 50 ? "PROBABLE" : "SUSPECT";
 
-    const report = await prisma.report.create({
+    const report = await (prisma.report as any).create({
       data: {
         title,
         description,
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
     }
 
     // --- CRÉATION AUTOMATIQUE DE L'INVESTIGATION ---
-    await prisma.investigation.create({
+    await (prisma as any).investigation.create({
       data: {
         reportId: report.id,
         aiSummary,
@@ -138,7 +138,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("q");
 
-    const reports = await prisma.report.findMany({
+    const reports = await (prisma.report as any).findMany({
     where: query ? {
       OR: [
         { title: { contains: query } },

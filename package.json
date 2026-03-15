@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "electron:dev": "electron .",
     "electron:build": "next build && electron-builder"
   },
