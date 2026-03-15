@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate",
+    "postinstall": "npx prisma generate",
     "electron:dev": "electron .",
     "electron:build": "next build && electron-builder"
   },
@@ -30,6 +30,7 @@
     "nodemailer": "^6.9.16"
   },
   "devDependencies": {
+    "prisma": "^7.5.0",
     "@prisma/config": "^7.5.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
