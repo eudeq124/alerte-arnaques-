@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     // Récupération de tous les rapports avec une région
-    const reports = await prisma.report.findMany({
+    const reports = await (prisma.report as any).findMany({
       where: {
         region: { not: null }
       },
@@ -15,8 +15,8 @@ export async function GET() {
 
     // Agrégation manuelle pour éviter les soucis de typage complexe sur groupBy
     const stats: Record<string, number> = {};
-    reports.forEach(r => {
-      const region = (r as any).region as string;
+    reports.forEach((r: any) => {
+      const region = r.region as string;
       stats[region] = (stats[region] || 0) + 1;
     });
 

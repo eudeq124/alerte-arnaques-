@@ -5,7 +5,7 @@ export async function GET(req: Request) {
   try {
     // On ne partage que les signalements à haut score de vérité (CERTIFIED ou PROBABLE)
     // Et on anonymise les données sensibles
-    const reports = await prisma.report.findMany({
+    const reports = await (prisma.report as any).findMany({
       where: {
         trustScore: { gte: 60 }
       },
