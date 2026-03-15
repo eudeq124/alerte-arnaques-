@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     // On ne partage que les signalements à haut score de vérité (CERTIFIED ou PROBABLE)

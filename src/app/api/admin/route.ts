@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "../auth/[...nextauth]/route";
 
+export const dynamic = "force-dynamic";
+
 // Check if the logged-in user is an admin via JWT role
 async function requireAdmin() {
   const session = await auth();
