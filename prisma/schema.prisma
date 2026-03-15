@@ -1,0 +1,236 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Report {
+  id             String     @id @default(cuid())
+  title          String
+  description    String
+  scamType       String
+  scammerDetails String?
+  proofsUrl      String?
+  isVerified     Boolean    @default(false)
+  trustScore     Int        @default(0)    // 0 to 100
+  verificationLevel String    @default("UNVERIFIED") // UNVERIFIED, SUSPECT, PROBABLE, CERTIFIED
+  city              String?    // Ville de l'arnaque
+  region            String?    // Région (pour la carte)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  
+  // KYC fields
+  reporterSelfie String?    // Photo temps réel du plaignant
+  reporterIdCard String?    // Photo de la CNI du plaignant
+
+  // Relations
+  category       Category   @relation(fields: [categoryId], references: [id])
+  categoryId     String
+  upvotes        Upvote[]
+  vouches        Vouch[]    // Confirmations by Gold users
+  comments       Comment[]
+  proofs         Proof[]
+  investigation  Investigation?
+  reporterId     String?
+  reporter       CertifiedUser? @relation(fields: [reporterId], references: [id])
+}
+
+model Vouch {
+  id        String   @id @default(cuid())
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportId  String
+  userId    String   // CertifiedUser ID
+  createdAt DateTime @default(now())
+
+  @@unique([reportId, userId])
+}
+
+model Proof {
+  id       String @id @default(cuid())
+  url      String // Base64 or URL
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportId String
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  author    String   @default("Anonyme")
+  createdAt DateTime @default(now())
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportId  String
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  reports     Report[]
+}
+
+model Upvote {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportId  String
+  userId    String?  // Linked to NextAuth User
+  userEmail String?  // Optional for anonymous tracking
+
+  @@unique([reportId, userId])
+}
+
+model Identity {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // "Logo", "Name", "Doc"
+  imageUrl    String?
+  description String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model CertifiedUser {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  city          String
+  country       String
+  phone         String
+  idCardPhoto   String   // Base64 or URL
+  selfiePhoto   String   // Base64 or URL
+  latitude      Float?
+  longitude     Float?
+  gmailAccount  String   @unique
+  isCertified   Boolean  @default(false)
+  points        Int      @default(0)     // Reputation points
+  rank          String   @default("DÉBUTANT") // DÉBUTANT, EXPERT, ÉLITE
+  reports       Report[]
+  createdAt     DateTime @default(now())
+}
+
+model NewsArticle {
+  id          String   @id @default(cuid())
+  title       String
+  summary     String
+  sourceUrl   String
+  imageUrl    String?
+  publishedAt DateTime @default(now())
+}
+
+model SecurityAdvisory {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  category  String   // e.g., "SMS", "BANK", "MAIL"
+  level     String   @default("INFO") // INFO, WARNING, CRITICAL
+  createdAt DateTime @default(now())
+}
+
+model Investigation {
+  id            String   @id @default(cuid())
+  reportId      String   @unique
+  report        Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  aiSummary     String   // Résumé de l'IA
+  riskLevel     String   // "Low", "Medium", "High", "Critical"
+  status        String   @default("OPEN") // "OPEN", "RESOLVED", "PROSECUTED", "BANNED"
+  isHandled     Boolean  @default(false)
+  adminNotes    String?
+  logs          String   // Journal JSON des actions de l'IA
+  createdAt     DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // "Mail", "InApp"
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SocialScan {
+  id          String   @id @default(cuid())
+  url         String
+  platform    String   // TikTok, FB, Insta
+  riskScore   Int
+  verdict     String   // "Réel", "Suspect", "Faux"
+  analysis    String   // JSON content of detections
+  createdAt   DateTime @default(now())
+}
+
+model AIPattern {
+  id          String   @id @default(cuid())
+  type        String   // "Username", "BioKeyword", "Location"
+  value       String
+  riskWeight  Int
+  occurrences Int      @default(1)
+  lastSeen    DateTime @default(now())
+}
+
+model AwarenessArticle {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  category  String
+  createdAt DateTime @default(now())
+}
+
+// NextAuth Models
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("USER") // ADMIN or USER
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
